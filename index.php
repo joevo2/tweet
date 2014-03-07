@@ -18,6 +18,8 @@
 	</style>
 </head>
 <body>
+	<button onclick="location.href='func1.php'">func1.php</button>
+	<br>
 	<img src="http://placehold.it/550x150&text=Twitter Clone App">
 	<?php include "func.php";?>
 	<form action="" method="post">
@@ -28,6 +30,7 @@
 	<span class="err">* <?php echo $errPost;?> </span>
 	<br>
 	<input type="submit">
+	<input type="submit" name="deleteAll" value="Delete All">
 	</form>
 	<br>
 	<?php include "print.php"; ?>
