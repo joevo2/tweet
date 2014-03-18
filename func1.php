@@ -7,7 +7,7 @@
 
 	function queryItem($con, $table, $col, $item) {
 		if (is_array($col) && is_array($item)) {
-			$query = "SELECT * " . "FROM " . $table . " WHERE ";
+			$query = "SELECT * FROM $table WHERE ";
 			for ($i=0; $i < count($item); $i++) { 
 				$query .= $col[$i] . " = '" . $item[$i] . "'";
 				if ($i != count($item)-1) {
@@ -16,7 +16,7 @@
 			}
 		}
 		else {
-			$query = "SELECT * " . "FROM " . $table . " WHERE " . $col . " = '" . $item . "'";
+			$query = "SELECT * FROM $table WHERE $col = '$item'";
 		}
 		$result = mysqli_query($con, $query) or die(mysqli_error($con));
 
@@ -24,15 +24,16 @@
 	}
 
 	function queryAll($con, $table) {
-		$query = "SELECT * " . "FROM " . $table;
+		$query = "SELECT * FROM $table";
 		$result = mysqli_query($con,$query) or die(mysqli_error($con));
 		
 		return $result;
 	}
 
+	//Not working, foreign ket constraint fail
 	function queryDelete($con, $table, $col, $item) {
 		if (is_array($col) && is_array($item)) {
-			$query = "DELETE FROM " . $table . " WHERE ";
+			$query = "DELETE FROM $table WHERE ";
 			for ($i=0; $i < count($item); $i++) { 
 				$query .= $col[$i] . " = '" . $item[$i] . "'";
 				if ($i != count($item)-1) {
@@ -41,18 +42,16 @@
 			}
 		}
 		else {
-			$query = "DELETE FROM " . $table . " WHERE " . $col . " = '" . $item . "'";
+			$query = "DELETE FROM $table WHERE $col = '$item'";
 		}
 		$result = mysqli_query($con, $query) or die(mysqli_error($con));
 
 		return $result;
 	}
 
-
-	//Can count 2 or more item from the same field using OR
 	function queryCount($con, $table, $col, $item) {
 		if (is_array($item)) {
-			$query = "SELECT COUNT(" . $col . ") FROM " . $table . " WHERE ";
+			$query = "SELECT COUNT($col) FROM $table WHERE ";
 			for ($i=0; $i < count($item); $i++) { 
 				$query .= $col . " = '" . $item[$i] . "'";
 				if ($i != count($item)-1) {
@@ -61,16 +60,41 @@
 			}
 		}
 		else
-			$query = "SELECT COUNT(" . $col . ") FROM " . $table . " WHERE " . $col . "='" . $item . "'";
+			$query = "SELECT COUNT($col) FROM $table WHERE $col = '$item'";
 		$result = mysqli_query($con, $query) or die(mysqli_error($con));
 		return $result;
 	}
 
-	function queryUpdate($con, $table, $col, $new, $old) {
-		$query = "UPDATE " . $table . " SET " . $col . "='" . $new . "' WHERE " . $col . "='" . $old . "'";
+	function queryUpdate($con, $table, $col, $old, $new) {
+		if (is_array($col) && is_array($item)) {
+			$query = "DELETE FROM $table WHERE ";
+			for ($i=0; $i < count($item); $i++) { 
+				$query .= $col[$i] . " = '" . $item[$i] . "'";
+				if ($i != count($item)-1) {
+					$query .= " AND ";
+				}
+			}
+		}
+		else 
+			$query = "UPDATE $table SET $col = '$new' WHERE $col = '$old'";
 		$result = mysqli_query($con, $query) or die(mysqli_error($con));
 	}
 
+	//Not working, foreign ket constraint fail
+	function queryInsert ($con, $table, $col, $item) {
+		if (is_array($col) && is_array($item)) {
+			$query = "INSERT INTO $table (" . implode(', ', $col) . ") VALUES ('" . implode("', '", $item) . "')";
+		}
+		else {
+			$query = "INSERT INTO $table ($col) VALUES ('$item')";
+		}
+		$result = mysqli_query($con, $query) or die(mysqli_error($con));
+	}
+
+	function qSearch ($con, $table, $col, $item) {
+		//$query = "SELECT * FROM " . $table . " WHERE " . $col . " LIKE '%" . $item ."%'"  ;
+		return mysqli_query($con, "SHOW COLUMNS FROM $table");
+	}
 
 	function queryDisplay($result) {
 		$rowCount = mysqli_num_rows($result);
@@ -88,68 +112,15 @@
 	$table = "customers";
 	$db = "classicmodels";
 	$con = mysqli_connect('localhost', 'root', '', $db);
-
-	//queryDisplay(queryAll($con, $table));
-	queryDisplay(queryItem($con, $table, array("country","state"), array("USA","CA")));
-	//queryDelete($con, $table, "customerNumber", "124");
-	//queryDisplay(queryCount($con, $table, "country", array("USA","Singapore")));
-
-
-
-
 	
-
-
-
-
-
+	$field = array("customerName","contactLastName","contactFirstName", "phone"
+		, "customerNumber", "addressLine1", "addressLine2", "city", "state", "postalCode", "country"
+		, "salesRepEmployeeNumber", "creditLimit");
+	$content = array("Joel", "Yek", "Zong Yong", "0146469678", "585", "42c-2-6 BAM Villa", "Jalan Pria, Taman Maluri"
+		,"Kuala Lumpur", "Wilayah Persekutuan", "55100", "Malaysia"
+		, NULL, "20000");
 	
-
-
-	//insert
-	//use array for multiple col and item? overloading?
-	function queryInsert ($con, $table, $col, $item) {
-		$query = "INSERT INTO " . $table . " (" . $col . ") VALUES ('" . $item . "')";
-		$result = mysqli_query($con, $query) or die(mysqli_error($con));
-	}
-
-	//update, limit to 1
-	
-
-	//group by
-	function queryGroupBy($con, $table, $col) {
-		$query = "SELECT " . $col ;
-	}
-
-
-	//testing	
-	if(isset($_POST['add'])) {
-		queryInsert($con,  $table, $col, $_POST['content']);
-	}
-	if(isset($_POST['delete'])) {
-		queryDelColItem($con,  $table, $col, $_POST['content']);
-	}
-
-	if(isset($_POST['count'])) {
-		echo "Count of '" . $_POST['content'] . "': ";
-		queryDisplay(queryCount($con,  $table, $col, $_POST['content']));
-	}
-
-	if(isset($_POST['update'])) {
-		queryUpdate($con,  $table, $col, $_POST['new'], $_POST['old']);
-	}
-
+	queryInsert($con, $table, $field, $content);
+	//queryDisplay(qSearch($con, $table));
 	
 ?>
-
-<form action="" method="post">
-	<input type="text" name="content">
-	<input type="submit" name="add" value="Add Record">
-	<input type="submit" name="delete" value="Delete Record">
-	<input type="submit" name="count" value="Count Record">
-	<!--For updating query-->
-	<br>
-	<input type="text" name="old" placeholder="Old">
-	<input type="text" name="new" placeholder="New">
-	<input type="submit" name="update" value="Update Record">
-</form>
